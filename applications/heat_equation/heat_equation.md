@@ -92,7 +92,7 @@ where $\mathbf{n}$ is the outward unit normal vector.
 - **Dirichlet ($u=0$ on $\partial \Omega$):** We restrict the test function space such that $w = 0$ on $\partial \Omega$. The boundary integral vanishes.
 - **Neumann ($\mathbf{n} \cdot \nabla u= 0$ on $\partial \Omega$):** The flux term $\mathbf{n} \cdot (D \nabla u)$ is zero. The boundary integral vanishes naturally.
 
-## Time discretization: Forward Euler
+## Time discretization: Forward Euler (explicit)
 We discretize the time derivative by
 $$
 \begin{equation}
@@ -121,16 +121,48 @@ r_{u x} = -\Delta t D \nabla u^{n}
 \end{equation}
 $$
 
-## Time discretization: Backward Euler
+The CFL condition for the timestep size is (2D case)
+$$
+\text{CFL} = \frac{D \Delta t}{\Delta x^2} \leq \frac{1}{4} \quad \Rightarrow \quad \Delta t \leq \frac{\Delta x^2}{4 D}
+$$
+Note that this condition is derived from finite difference discretization. For finite element, the basic structure of the CFL condition remain the same. But the constant 1/4 may differ, depending on element types. 
+
+## Time discretization: Backward Euler (implicit)
 We use $u^{n+1}$ for the right hand side of the equation.
 
 The weak form becomes
 $$
 \begin{equation}
-    \int_{\Omega} w u^{n+1} \, d\Omega = \int_{\Omega} w u^{n} + \nabla w \cdot (-\Delta t D\nabla u^{n+1}) \, d\Omega
+    \int_{\Omega} w ~ u^{n+1} + \nabla w \cdot (\Delta t D\nabla u^{n+1}) \, d\Omega = \int_{\Omega} w ~ u^{n} \, d\Omega
 \end{equation}
 $$
 
 We have
+$$
+\begin{equation}
+l_{u}= u^{n+1}
+\end{equation}
+$$
 
+$$
+\begin{equation}
+l_{u x} = \Delta t D \nabla u^{n+1}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+r_{u}= u^{n}
+\end{equation}
+$$
+
+
+The implicit time stepping scheme is not bound by any CFL-like condition on the timestep. We can choose the timestep adaptively by a given criteria. 
+
+
+<!-- ## Time discretization: Crank-Nicolson
+
+## Time discretization: BDF
+
+## Time discretization: RK4 -->
 
