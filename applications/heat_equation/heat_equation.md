@@ -121,11 +121,17 @@ r_{u x} = -\Delta t D \nabla u^{n}
 \end{equation}
 $$
 
+which need to be implemented in function `compute_explicit_rhs()`.
+
 The CFL condition for the timestep size is (2D case)
 $$
 \text{CFL} = \frac{D \Delta t}{\Delta x^2} \leq \frac{1}{4} \quad \Rightarrow \quad \Delta t \leq \frac{\Delta x^2}{4 D}
 $$
-Note that this condition is derived from finite difference discretization. For finite element, the basic structure of the CFL condition remain the same. But the constant 1/4 may differ, depending on element types. 
+Note that this condition is derived from finite difference discretization. For finite element, the basic structure of the CFL condition remains the same. But the constant 1/4 may differ, depending on element types. For Lagrange elements, a rough estimate is
+$$
+\text{CFL} = \frac{D \Delta t \rho^2}{\Delta x^2} \leq \frac{1}{2 d}
+$$
+where $\rho$ is the element degree and $d$ is the dimension.
 
 ## Time discretization: Backward Euler (implicit)
 We use $u^{n+1}$ for the right hand side of the equation.
@@ -137,27 +143,41 @@ $$
 \end{equation}
 $$
 
+In PRISMS-PF, a Newton type solver is used so we need to write it in incremental form. Denote $u^{n+1} = u_0 + \Delta u$, the weak form becomes
+$$
+\begin{equation}
+    \int_{\Omega} w ~ \Delta u + \nabla w \cdot (\Delta t D\nabla (\Delta u)) \, d\Omega = \int_{\Omega} w ~ (u^{n}-u_0) + \nabla w \cdot (-\Delta t D\nabla u_0) \, d\Omega
+\end{equation}
+$$
+
 We have
 $$
 \begin{equation}
-l_{u}= u^{n+1}
+l_{u}= \Delta u
 \end{equation}
 $$
 
 $$
 \begin{equation}
-l_{u x} = \Delta t D \nabla u^{n+1}
+l_{u x} = \Delta t D \nabla (\Delta u)
 \end{equation}
 $$
 
 $$
 \begin{equation}
-r_{u}= u^{n}
+r_{u}= u^{n} - u_0
 \end{equation}
 $$
 
+$$
+\begin{equation}
+r_{ux}= -\Delta t D\nabla u_0
+\end{equation}
+$$
 
-The implicit time stepping scheme is not bound by any CFL-like condition on the timestep. We can choose the timestep adaptively by a given criteria. 
+which to be implemented in function `compute_nonexplicit_lhs()` and `compute_nonexplicit_rhs()`, respectively.
+
+The implicit time stepping scheme is not bound by any CFL-like condition on the timestep. We can choose the timestep adaptively by a given criteria.
 
 
 <!-- ## Time discretization: Crank-Nicolson
@@ -165,4 +185,3 @@ The implicit time stepping scheme is not bound by any CFL-like condition on the 
 ## Time discretization: BDF
 
 ## Time discretization: RK4 -->
-
