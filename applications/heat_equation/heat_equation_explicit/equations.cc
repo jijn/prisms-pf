@@ -97,13 +97,12 @@ CustomPDE<dim, degree, number>::compute_postprocess_explicit_rhs(
   const number pi = std::numbers::pi_v<number>;
 
   ScalarValue u_analytical = std::exp(-1. * dim * DT * pi * pi * time);
-  for (unsigned int i = 0; i < dim; ++i)
-    {
-      if (bctype == BoundaryCondition::Type::Dirichlet)
-        u_analytical *= std::sin(pi * q_point_loc[i]);
-      else if (bctype == BoundaryCondition::Type::Natural)
-        u_analytical *= std::cos(pi * q_point_loc[i]);
-    }
+  if (bctype == BoundaryCondition::Type::Dirichlet)
+    for (unsigned int i = 0; i < dim; ++i)
+      u_analytical *= std::sin(pi * q_point_loc[i]);
+  else if (bctype == BoundaryCondition::Type::Natural)
+    for (unsigned int i = 0; i < dim; ++i)
+      u_analytical *= std::cos(pi * q_point_loc[i]);
   variable_list.set_value_term(1, u_analytical);
   variable_list.set_value_term(2, std::abs(u - u_analytical));
 }
