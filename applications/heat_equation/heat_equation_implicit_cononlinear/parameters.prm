@@ -21,15 +21,15 @@ subsection Rectangular mesh
 end
 
 # The timestep
-set time step = 0.1
-set number steps = 2
+set time step = 0.01
+set number steps = 4
 #set end time = 0.05
 
 # The number of outputs and the frequency at which they output. The potential options
 # for the type of output are: EQUAL_SPACING, LOG_SPACING, and N_PER_DECADE.
 subsection output
   set condition = EQUAL_SPACING
-  set number = 3
+  set number = 5
 end
 
 # The boundary conditions for the variables. The available boundary conditions are
