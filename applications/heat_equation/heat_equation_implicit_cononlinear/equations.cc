@@ -82,6 +82,7 @@ CustomPDE<dim, degree, number>::compute_nonexplicit_rhs(
       ScalarValue  gamma = variable_list.template get_value<ScalarValue>(3);
       ScalarValue  u     = variable_list.template get_value<ScalarValue>(0);
       ScalarGrad   ux    = variable_list.template get_gradient<ScalarGrad>(0);
+      variable_list.set_value_term(3, ScalarValue(0));
       variable_list.set_gradient_term(3, -1.0 * ux / (pi * pi));
     }
 }
@@ -125,7 +126,7 @@ CustomPDE<dim, degree, number>::compute_postprocess_explicit_rhs(
                   .at(0) // index
                   .at(0) // component
                   .get_boundary_condition_map()
-                  .at(0); // boundary_id???, how to specify boundary_id in input file?
+                  .at(0);
   const number pi = std::numbers::pi_v<number>;
 
   ScalarValue u_analytical = std::exp(-1. * dim * DT * pi * pi * time);
