@@ -132,6 +132,8 @@ enum DataFormatType : std::uint8_t
 {
   VTKUnstructuredGrid,
   FlatBinary,
+  HDF5,
+  XDMF,
   LastEntry
 };
 
@@ -233,8 +235,12 @@ to_string(DataFormatType type)
         return "vtk_unstructured_grid";
       case DataFormatType::FlatBinary:
         return "flat_binary";
+      case DataFormatType::HDF5:
+        return "HDF5";
+      case DataFormatType::XDMF:
+        return "XDMF";
       default:
-        return "unknown";
+        return "UNKNOWN";
     }
 }
 

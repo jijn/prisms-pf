@@ -29,7 +29,9 @@ PRISMS_PF_BEGIN_NAMESPACE
 enum class Type
 {
   ReadUnstructuredVTK,
-  ReadBinary
+  ReadBinary,
+  ReadHDF5,
+  ReadXDMF,
 };
 
 template <unsigned int dim, typename number>
@@ -52,6 +54,17 @@ create_reader(const InitialConditionFile       &ic_file,
 #endif
       case DataFormatType::FlatBinary:
         return std::make_shared<ReadBinary<dim, number>>(ic_file, spatial_discretization);
+      case DataFormatType::HDF5:
+#ifdef PRISMS_PF_WITH_HDF5
+        return std::make_shared<ReadHDF5<dim, number>>(ic_file, spatial_discretization);
+#else
+        AssertThrow(
+          false,
+          dealii::ExcMessage(
+            "You are trying to read an HDF5 file as an input; however, PRISMS-PF "
+            "was not built with HDF5. Please reconfig PRISMS-PF with HDF5 using "
+            "-D PRISMS_PF_WITH_HDF5=ON"));
+#endif
       default:
         AssertThrow(false, UnreachableCode());
     }
