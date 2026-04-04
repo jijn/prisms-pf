@@ -5,6 +5,7 @@
 
 #include <prismspf/field_input/read_vtk_base.h>
 
+#include <vtkXdmf3Writer.h>
 #include <vtkXdmfReader.h>
 
 PRISMS_PF_BEGIN_NAMESPACE
@@ -32,6 +33,13 @@ public:
    */
   ReadXDMF(const InitialConditionFile       &_ic_file,
            const SpatialDiscretization<dim> &_spatial_discretization);
+
+  /**
+   * @brief Write data to XDMF file
+   */
+  static void
+  write_file(const vtkSmartPointer<vtkUnstructuredGrid> &grid,
+             const std::string                          &filename);
 
 private:
   /**
@@ -110,6 +118,19 @@ ReadXDMF<dim, number>::ReadXDMF(const InitialConditionFile       &_ic_file,
             }
         }
     }
+}
+
+template <unsigned int dim, typename number>
+inline void
+ReadXDMF<dim, number>::write_file(const vtkSmartPointer<vtkUnstructuredGrid> &grid,
+                                  const std::string                          &filename)
+{
+  vtkNew<vtkXdmf3Writer> writer;
+  writer->SetFileName(filename.c_str());
+  writer->SetInputData(grid);
+
+  // Write the file to disk (generates both the .xdmf and associated .h5 file)
+  writer->Write();
 }
 
 PRISMS_PF_END_NAMESPACE

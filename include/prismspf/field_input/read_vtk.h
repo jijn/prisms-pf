@@ -6,6 +6,7 @@
 #include <prismspf/field_input/read_vtk_base.h>
 
 #include <vtkUnstructuredGridReader.h>
+#include <vtkUnstructuredGridWriter.h>
 
 PRISMS_PF_BEGIN_NAMESPACE
 
@@ -25,6 +26,13 @@ public:
    */
   ReadUnstructuredVTK(const InitialConditionFile       &_ic_file,
                       const SpatialDiscretization<dim> &_spatial_discretization);
+
+  /**
+   * @brief Write a vtkUnstructuredGrid to a legacy .vtk file for testing/output.
+   */
+  static void
+  write_file(const vtkSmartPointer<vtkUnstructuredGrid> &grid,
+             const std::string                          &filename);
 
 private:
   /**
@@ -104,6 +112,22 @@ ReadUnstructuredVTK<dim, number>::ReadUnstructuredVTK(
   unsigned int n_vectors = reader->GetNumberOfVectorsInFile();
   for (unsigned int i = 0; i < n_vectors; ++i)
     this->vectors_names.push_back(reader->GetVectorsNameInFile(static_cast<int>(i)));
+}
+
+template <unsigned int dim, typename number>
+inline void
+ReadUnstructuredVTK<dim, number>::write_file(
+  const vtkSmartPointer<vtkUnstructuredGrid> &grid,
+  const std::string                          &filename)
+{
+  vtkNew<vtkUnstructuredGridWriter> writer;
+  writer->SetFileName(filename.c_str());
+
+  // Pass the grid topology and data to the writer
+  writer->SetInputData(grid);
+
+  // Execute the disk write
+  writer->Write();
 }
 
 PRISMS_PF_END_NAMESPACE
