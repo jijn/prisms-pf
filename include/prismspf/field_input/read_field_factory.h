@@ -18,6 +18,10 @@
 #ifdef PRISMS_PF_WITH_VTK
 #  include <prismspf/field_input/read_vtk.h>
 #endif
+#ifdef PRISMS_PF_WITH_HDF5
+// #include <prismspf/field_input/read_hdf5.h>
+// #include <prismspf/field_input/read_xdmf.h>
+#endif
 
 PRISMS_PF_BEGIN_NAMESPACE
 
@@ -52,30 +56,33 @@ create_reader(const InitialConditionFile       &ic_file,
                       "was not built with VTK. Please reconfig PRISMS-PF with VTK using "
                       "-D PRISMS_PF_WITH_VTK=ON"));
 #endif
-      case DataFormatType::XDMF:
-#if defined(PRISMS_PF_WITH_VTK) && defined(PRISMS_PF_WITH_HDF5)
-        return std::make_shared<ReadXDMF<dim, number>>(ic_file, spatial_discretization);
-#else
-        AssertThrow(
-          false,
-          dealii::ExcMessage(
-            "You are trying to read a XDMF+H5 file as an input; however, PRISMS-PF "
-            "was not built with VTK and HDF5. Please reconfig PRISMS-PF with VTK using "
-            "-D PRISMS_PF_WITH_VTK=ON and -D PRISMS_PF_WITH_HDF5=ON"));
-#endif
+        // case DataFormatType::XDMF:
+        // #if defined(PRISMS_PF_WITH_VTK) && defined(PRISMS_PF_WITH_HDF5)
+        //   return std::make_shared<ReadXDMF<dim, number>>(ic_file,
+        //   spatial_discretization);
+        // #else
+        //   AssertThrow(
+        //     false,
+        //     dealii::ExcMessage(
+        //       "You are trying to read a XDMF+H5 file as an input; however, PRISMS-PF "
+        //       "was not built with VTK and HDF5. Please reconfig PRISMS-PF with VTK
+        //       using "
+        //       "-D PRISMS_PF_WITH_VTK=ON and -D PRISMS_PF_WITH_HDF5=ON"));
+        // #endif
       case DataFormatType::FlatBinary:
         return std::make_shared<ReadBinary<dim, number>>(ic_file, spatial_discretization);
-      case DataFormatType::HDF5:
-#ifdef PRISMS_PF_WITH_HDF5
-        return std::make_shared<ReadHDF5<dim, number>>(ic_file, spatial_discretization);
-#else
-        AssertThrow(
-          false,
-          dealii::ExcMessage(
-            "You are trying to read an HDF5 file as an input; however, PRISMS-PF "
-            "was not built with HDF5. Please reconfig PRISMS-PF with HDF5 using "
-            "-D PRISMS_PF_WITH_HDF5=ON"));
-#endif
+        // case DataFormatType::HDF5:
+        // #ifdef PRISMS_PF_WITH_HDF5
+        //   return std::make_shared<ReadHDF5<dim, number>>(ic_file,
+        //   spatial_discretization);
+        // #else
+        //   AssertThrow(
+        //     false,
+        //     dealii::ExcMessage(
+        //       "You are trying to read an HDF5 file as an input; however, PRISMS-PF "
+        //       "was not built with HDF5. Please reconfig PRISMS-PF with HDF5 using "
+        //       "-D PRISMS_PF_WITH_HDF5=ON"));
+        // #endif
       default:
         AssertThrow(false, UnreachableCode());
     }

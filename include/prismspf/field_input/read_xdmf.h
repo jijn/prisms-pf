@@ -5,8 +5,8 @@
 
 #include <prismspf/field_input/read_vtk_base.h>
 
+#include <vtkXdmf3Reader.h>
 #include <vtkXdmf3Writer.h>
-#include <vtkXdmfReader.h>
 
 PRISMS_PF_BEGIN_NAMESPACE
 
@@ -46,7 +46,7 @@ private:
    * @brief Smart pointer to the VTK XDMF reader. Automatically manages the memory for the
    * reader instance.
    */
-  vtkNew<vtkXdmfReader> reader;
+  vtkNew<vtkXdmf3Reader> reader;
 };
 
 template <unsigned int dim, typename number>
@@ -56,7 +56,7 @@ ReadXDMF<dim, number>::ReadXDMF(const InitialConditionFile       &_ic_file,
 {
   // Create a reader for the XDMF file and update it to trigger the read process.
   // vtkNew is a smart pointer so we don't need to manage it with delete.
-  reader = vtkNew<vtkXdmfReader>();
+  reader = vtkNew<vtkXdmf3Reader>();
   reader->SetFileName(this->ic_file.filename.c_str());
   reader->Update();
 

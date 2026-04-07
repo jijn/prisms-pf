@@ -21,7 +21,7 @@ public:
 
 private:
   void
-  check_dataset_size(const std::vector<dealii::HDF5::hsize_type> &dims);
+  check_dataset_size(const std::vector<hsize_t> &dims);
 };
 
 template <unsigned int dim, typename number>
@@ -45,7 +45,7 @@ inline ReadHDF5<dim, number>::ReadHDF5(
     this->n_points *= this->ic_file.n_data_points[d];
 
   dealii::HDF5::File data_file(this->ic_file.filename,
-                               dealii::HDF5::File::FileAccessMode::read);
+                               dealii::HDF5::File::FileAccessMode::open);
 
   std::string dataset_name = this->ic_file.file_variable_names[0];
   auto        dataset      = data_file.open_dataset(dataset_name);
@@ -54,13 +54,14 @@ inline ReadHDF5<dim, number>::ReadHDF5(
   check_dataset_size(dims);
 
   this->data.resize(this->n_values);
-  dataset.read(this->data);
+
+  // dataset.read(dealii::make_array_view(this->data));
+  data_file.read_dataset(dataset_name, this->data);
 }
 
 template <unsigned int dim, typename number>
 inline void
-ReadHDF5<dim, number>::check_dataset_size(
-  const std::vector<dealii::HDF5::hsize_type> &dims)
+ReadHDF5<dim, number>::check_dataset_size(const std::vector<hsize_t> &dims)
 {
   dealii::types::global_dof_index file_size = 1;
   for (auto d : dims)
@@ -88,7 +89,7 @@ ReadHDF5<dim, number>::write_file(const std::vector<number>  &data,
   dealii::HDF5::File data_file(ic_file.filename,
                                dealii::HDF5::File::FileAccessMode::create);
 
-  std::vector<dealii::HDF5::hsize_type> dims = {data.size()};
+  std::vector<hsize_t> dims = {data.size()};
 
   std::string dataset_name =
     ic_file.file_variable_names.empty() ? "data" : ic_file.file_variable_names[0];
