@@ -17,7 +17,13 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 
 # Project declaration, language, and version
-project(prisms_pf LANGUAGES CXX VERSION 4.0.0)
+project(
+  prisms_pf
+  LANGUAGES
+    C
+    CXX
+  VERSION 4.0.0
+)
 
 # Export compile command for IDE lsp support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -81,6 +87,11 @@ option(
   "Whether the user wants to compile PRISMS-PF with the profiling code Caliper, or not."
   OFF
 )
+option(
+  PRISMS_PF_WITH_HDF5
+  "Whether the user wants to use PRISMS-PF with hdf5, or not"
+  OFF
+)
 
 print_variables(
   ""
@@ -96,6 +107,7 @@ print_variables(
   PRISMS_PF_THREADS
   ""
   PRISMS_PF_WITH_VTK
+  PRISMS_PF_WITH_HDF5
   PRISMS_PF_WITH_CALIPER
   ""
 )
@@ -128,7 +140,13 @@ endif()
 
 # Find MPI
 # TODO: We should see if there's a minimum version we need to specify
-find_package(MPI REQUIRED COMPONENTS CXX)
+find_package(
+  MPI
+  REQUIRED
+  COMPONENTS
+    C
+    CXX
+)
 
 if(NOT MPI_CXX_FOUND)
   message(
@@ -155,6 +173,9 @@ if(NOT MPI_CXX_VERSION)
 
   set(MPI_CXX_VERSION "${_mpi_major}.${_mpi_minor}")
 endif()
+
+set(HDF5_PREFER_PARALLEL TRUE)
+# set(HDF5_FIND_DEBUG ON)
 
 # TODO: Refactor this
 
@@ -196,6 +217,7 @@ print_variables(
   DEAL_II_FEATURE_TASKFLOW_BUNDLED_CONFIGURED
   DEAL_II_WITH_TBB
   DEAL_II_WITH_VTK
+  DEAL_II_WITH_HDF5
   DEAL_II_WITH_ZLIB
   DEAL_II_ZLIB_VERSION
   ""
@@ -278,8 +300,36 @@ if(NOT DEAL_II_WITH_64BIT_INDICES STREQUAL PRISMS_PF_64BIT_INDICES)
   )
 endif()
 
-# TODO: Add caliper
-# TODO: Add VTK
+# caliper
+if(PRISMS_PF_WITH_CALIPER)
+  find_package(caliper REQUIRED)
+  if(caliper_FOUND)
+    message(STATUS "Found Caliper at: ${caliper_DIR}")
+  endif()
+endif()
+
+# User built VTK library
+if(PRISMS_PF_WITH_VTK)
+  find_package(VTK QUIET)
+  if(VTK_FOUND)
+    message(STATUS "Found VTK version ${VTK_VERSION}")
+  else()
+    message(FATAL_ERROR "PRISMS_PF_WITH_VTK is ON but VTK was not found.")
+  endif()
+endif()
+
+# HDF5
+if(PRISMS_PF_WITH_HDF5)
+  # Verify HDF5 support
+  if(DEAL_II_WITH_HDF5)
+    message(STATUS "Included HDF5 provided via deal.II")
+  else()
+    message(
+      FATAL_ERROR
+      "PRISMS_PF_WITH_HDF5 is set to ON, but deal.II was not built with HDF5 support."
+    )
+  endif()
+endif()
 
 # FetchCotent MakeAvailable for the other vendored dependencies
 set(PRISMS_PF_VENDORED_PACKAGES libassert)

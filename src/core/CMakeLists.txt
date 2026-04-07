@@ -70,3 +70,27 @@ prisms_pf_target_sources(
   "${_sources}"
   "${_inst_bases}"
 )
+
+# VTK
+if(PRISMS_PF_WITH_VTK)
+  find_package(
+    VTK
+    REQUIRED
+    COMPONENTS
+      CommonCore
+      CommonDataModel
+      IOLegacy
+      IOXdmf3
+  )
+
+  foreach(_target ${PRISMS_PF_TARGETS})
+    if(TARGET ${_target})
+      target_link_libraries(${_target} PRIVATE ${VTK_LIBRARIES})
+
+      # IMPORTANT: VTK 9+ uses a module system that requires a macro call
+      # to initialize "object factories" if you are doing complex operations.
+      # This line ensures the specialized VTK implementations are linked.
+      vtk_module_autoinit(TARGETS ${_target} MODULES ${VTK_LIBRARIES})
+    endif()
+  endforeach()
+endif()
