@@ -95,11 +95,12 @@ ReadUnstructuredVTK<dim, number>::ReadUnstructuredVTK(
   this->n_cells  = this->output_grid->GetNumberOfCells();
 
   // Check that the number of points and cells are not too large
-  AssertThrow(n_points_vtk < std::numeric_limits<dealii::types::global_dof_index>::max(),
+  AssertThrow(this->n_points <
+                std::numeric_limits<dealii::types::global_dof_index>::max(),
               dealii::ExcMessage(
                 "The number of points being read-in from the vtk file is too large. Try "
                 "recompiling deal.II with 64-bit indices."));
-  AssertThrow(n_cells_vtk < std::numeric_limits<dealii::types::global_dof_index>::max(),
+  AssertThrow(this->n_cells < std::numeric_limits<dealii::types::global_dof_index>::max(),
               dealii::ExcMessage(
                 "The number of cells being read-in from the vtk file is too large. Try "
                 "recompiling deal.II with 64-bit indices."));
