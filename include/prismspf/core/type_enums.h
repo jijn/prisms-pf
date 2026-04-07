@@ -236,9 +236,9 @@ to_string(DataFormatType type)
       case DataFormatType::FlatBinary:
         return "flat_binary";
       case DataFormatType::HDF5:
-        return "HDF5";
+        return "hdf5";
       case DataFormatType::XDMF:
-        return "XDMF";
+        return "xdmf";
       default:
         return "UNKNOWN";
     }
