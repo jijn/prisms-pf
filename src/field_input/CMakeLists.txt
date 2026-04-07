@@ -6,7 +6,11 @@ set(
   ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_binary.h
   ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_field_base.h
   ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_field_factory.h
+  ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_hdf5.h
+  ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_structured_base.h
+  ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_vtk_base.h
   ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_vtk.h
+  ${PROJECT_SOURCE_DIR}/include/prismspf/field_input/read_xdmf.h
 )
 
 set(_inst_bases)
