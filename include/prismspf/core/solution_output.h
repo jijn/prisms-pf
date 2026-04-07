@@ -151,8 +151,7 @@ public:
 
         const std::string h5_filename =
           file_prefix + "_" + increment_stream.str() + ".h5";
-        const std::string xdmf_filename =
-          file_prefix + "_" + increment_stream.str() + ".xdmf";
+        const std::string xdmf_filename = file_prefix + ".xdmf";
 
         // Prepare the data filter
         dealii::DataOutBase::DataOutFilter data_filter(
@@ -162,8 +161,7 @@ public:
         // Write binary HDF5
         data_out.write_hdf5_parallel(data_filter, h5_filename, MPI_COMM_WORLD);
 
-        // Create the XDMF wrapper
-        std::vector<dealii::XDMFEntry> xdmf_entries;
+        // Create the XDMF wrapper for this timestep and append it to the list
         xdmf_entries.push_back(data_out.create_xdmf_entry(data_filter,
                                                           h5_filename,
                                                           increment,
@@ -189,6 +187,9 @@ public:
         solution_indexer.get_solution_vector(index).update_ghost_values();
       }
   }
+
+private:
+  std::vector<dealii::XDMFEntry> xdmf_entries;
 };
 
 PRISMS_PF_END_NAMESPACE
