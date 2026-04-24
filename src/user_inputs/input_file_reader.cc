@@ -417,7 +417,8 @@ InputFileReader::declare_solver_parameters()
           "is stopped.");
         parameter_handler.declare_entry("preconditioner type",
                                         "GMG",
-                                        dealii::Patterns::Selection("None|GMG"),
+                                        dealii::Patterns::Selection(
+                                          "None|Jacobi|Chebyshev|GMG"),
                                         "The preconditioner type for the linear solver.");
         parameter_handler.declare_entry("smoothing range",
                                         "15.0",
