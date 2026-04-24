@@ -208,6 +208,24 @@ public:
 
     void
     integrate_and_distribute(BlockVector<number> *dst_solutions);
+
+    void
+    clear()
+    {
+      if (fe_eval_src_dst)
+        {
+          // Reset the integration bitmask
+          integration_flags = EvalFlags::nothing;
+
+          // Explicitly zero out the internal quadrature point buffers in deal.II
+          auto &fe = fe_eval_src_dst->first;
+          for (unsigned int q = 0; q < fe.n_q_points; ++q)
+            {
+              fe.submit_value(Value<Rank>(), q);
+              fe.submit_gradient(Gradient<Rank>(), q);
+            }
+        }
+    }
   };
 
   /**
@@ -422,6 +440,71 @@ public:
   template <typename GradType>
   void
   set_gradient_term(Types::Index field_index, const GradType &val);
+
+  /**
+   * @brief Get the number of DoFs per cell for a specific field.
+   */
+  template <TensorRank Rank>
+  [[nodiscard]] unsigned int
+  get_dofs_per_cell(Types::Index field_index) const
+  {
+    return get_relevant_feeval_vector<Rank>()[field_index]
+      .template get<DependencyType::DST>()
+      .dofs_per_cell;
+  }
+
+  /**
+   * @brief Inject a specific local DoF value directly into the FEEvaluation.
+   */
+  template <TensorRank Rank, typename ValueType>
+  void
+  set_dof_value(Types::Index field_index, const ValueType &val, unsigned int dof_index)
+  {
+    get_relevant_feeval_vector<Rank>()[field_index]
+      .template get<DependencyType::DST>()
+      .submit_dof_value(val, dof_index);
+  }
+
+  /**
+   * @brief Retrieve a specific local DoF value from the FEEvaluation.
+   */
+  template <TensorRank Rank>
+  auto
+  get_dof_value(Types::Index field_index, unsigned int dof_index) const
+  {
+    return get_relevant_feeval_vector<Rank>()[field_index]
+      .template get<DependencyType::DST>()
+      .get_dof_value(dof_index);
+  }
+
+  /**
+   * @brief Manually evaluate the shape functions for a single field.
+   */
+  template <TensorRank Rank>
+  void
+  evaluate_field(Types::Index field_index)
+  {
+    auto &dep = get_relevant_feeval_vector<Rank>()[field_index];
+    dep.template get<DependencyType::DST>().evaluate(dep.fe_eval_src_dst->second);
+  }
+
+  /**
+   * @brief Manually integrate the shape functions for a single field.
+   */
+  template <TensorRank Rank>
+  void
+  integrate_field(Types::Index field_index)
+  {
+    auto &dep = get_relevant_feeval_vector<Rank>()[field_index];
+    dep.template get<DependencyType::DST>().integrate(dep.integration_flags);
+  }
+
+  template <TensorRank Rank>
+  void
+  clear_field_dst(Types::Index field_index)
+  {
+    get_relevant_feeval_vector<Rank>()[field_index].clear();
+  }
 
 private:
   template <TensorRank Rank>

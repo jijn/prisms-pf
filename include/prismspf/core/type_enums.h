@@ -142,6 +142,8 @@ enum SolverToleranceType : std::uint8_t
 enum PreconditionerType : std::uint8_t
 {
   None,
+  Jacobi,
+  Chebyshev,
   GMG
 };
 
@@ -254,6 +256,10 @@ to_string(PreconditionerType type)
     {
       case PreconditionerType::None:
         return "None";
+      case PreconditionerType::Jacobi:
+        return "Jacobi";
+      case PreconditionerType::Chebyshev:
+        return "Chebyshev";
       case PreconditionerType::GMG:
         return "GMG";
       default:

@@ -346,10 +346,31 @@ UserInputParameters<dim>::assign_linear_solve_parameters(
           static_cast<unsigned int>(parameter_handler.get_integer("max iterations"));
 
         // Set preconditioner type and related parameters
-        linear_solver_parameters.preconditioner =
-          boost::iequals(parameter_handler.get("preconditioner type"), "GMG")
-            ? PreconditionerType::GMG
-            : PreconditionerType::None;
+        const std::string preconditioner_string =
+          parameter_handler.get("preconditioner type");
+        if (boost::iequals(preconditioner_string, "GMG"))
+          {
+            linear_solver_parameters.preconditioner = PreconditionerType::GMG;
+          }
+        else if (boost::iequals(preconditioner_string, "Jacobi"))
+          {
+            linear_solver_parameters.preconditioner = PreconditionerType::Jacobi;
+          }
+        else if (boost::iequals(preconditioner_string, "Chebyshev"))
+          {
+            linear_solver_parameters.preconditioner = PreconditionerType::Chebyshev;
+          }
+        else if (boost::iequals(preconditioner_string, "None"))
+          {
+            linear_solver_parameters.preconditioner = PreconditionerType::None;
+          }
+        else
+          {
+            AssertThrow(false,
+                        dealii::ExcMessage(
+                          "Unrecognized preconditioner type: " + preconditioner_string +
+                          ". Valid options are: None, Jacobi, Chebyshev, GMG."));
+          }
 
         linear_solver_parameters.smoothing_range =
           parameter_handler.get_double("smoothing range");

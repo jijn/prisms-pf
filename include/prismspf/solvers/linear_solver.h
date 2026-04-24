@@ -104,6 +104,8 @@ public:
     linear_solver_control.set_max_steps(lin_params.max_iterations);
     linear_solver_control.set_tolerance(lin_params.tolerance * normalization_value());
     inhomogeneous_values.reinit(solutions.get_solution_full_vector(0));
+    preconditioner_diagonal.reinit(solutions.get_solution_full_vector(0));
+    jacobi_preconditioner.reinit(preconditioner_diagonal);
     solutions.apply_constraints(inhomogeneous_values, 0);
     inhomogeneous_rhs.reinit(solutions.get_solution_full_vector(0));
   }
@@ -122,6 +124,8 @@ public:
           solutions.get_solution_full_vector(relative_level));
       }
     inhomogeneous_values.reinit(solutions.get_solution_full_vector(0));
+    preconditioner_diagonal.reinit(solutions.get_solution_full_vector(0));
+    jacobi_preconditioner.reinit(preconditioner_diagonal);
     solutions.apply_constraints(inhomogeneous_values, 0);
     inhomogeneous_rhs.reinit(solutions.get_solution_full_vector(0));
   }
@@ -185,7 +189,55 @@ public:
     try
       {
         dealii::SolverCG<BlockVector<number>> cg_solver(linear_solver_control);
-        cg_solver.solve(lhs_operator, x_vector, b_vector, dealii::PreconditionIdentity());
+
+        // Switch based on the user-selected preconditioner
+        switch (lin_params.preconditioner)
+          {
+            case PreconditionerType::None:
+            case PreconditionerType::GMG: // not implemented, fallback to None
+              {
+                cg_solver.solve(lhs_operator,
+                                x_vector,
+                                b_vector,
+                                dealii::PreconditionIdentity());
+                break;
+              }
+            case PreconditionerType::Jacobi:
+              {
+                // Compute the diagonal of the matrix-free operator
+                lhs_operator.compute_diagonal(preconditioner_diagonal);
+
+                cg_solver.solve(lhs_operator, x_vector, b_vector, jacobi_preconditioner);
+                break;
+              }
+            case PreconditionerType::Chebyshev:
+              {
+                // Compute diagonal values
+                lhs_operator.compute_diagonal(preconditioner_diagonal);
+
+                // Setup Chebyshev
+                using ChebyshevPreconditioner = dealii::PreconditionChebyshev<
+                  MFOperator<dim, degree, number>,
+                  BlockVector<number>,
+                  dealii::DiagonalMatrix<BlockVector<number>>>;
+                typename ChebyshevPreconditioner::AdditionalData chebyshev_data;
+                chebyshev_data.degree = 3;
+
+                chebyshev_data.preconditioner =
+                  std::make_shared<dealii::DiagonalMatrix<BlockVector<number>>>();
+                chebyshev_data.preconditioner->reinit(preconditioner_diagonal);
+
+                ChebyshevPreconditioner chebyshev_preconditioner;
+                chebyshev_preconditioner.initialize(lhs_operator, chebyshev_data);
+
+                cg_solver.solve(lhs_operator,
+                                x_vector,
+                                b_vector,
+                                chebyshev_preconditioner);
+                break;
+              }
+          }
+
         if (solve_context->get_user_inputs().output_parameters.should_output(
               solve_context->get_simulation_timer().get_increment()))
           {
@@ -253,6 +305,16 @@ private:
    * @brief Result of the linear operator applied to the inhomogeneous values.
    */
   BlockVector<number> inhomogeneous_rhs;
+
+  /**
+   * @brief Diagonal vector used for Jacobi and Chebyshev preconditioners
+   */
+  BlockVector<number> preconditioner_diagonal;
+
+  /**
+   * @brief Diagonal matrix preconditioner
+   */
+  dealii::DiagonalMatrix<BlockVector<number>> jacobi_preconditioner;
 };
 
 PRISMS_PF_END_NAMESPACE

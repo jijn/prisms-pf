@@ -6,6 +6,7 @@
 #include <deal.II/base/vectorization.h>
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/operators.h>
+#include <deal.II/matrix_free/tools.h>
 
 #include <prismspf/core/field_attributes.h>
 #include <prismspf/core/field_container.h>
@@ -157,6 +158,12 @@ public:
   compute_operator(BlockVector<number>       &dst,
                    const BlockVector<number> &src = BlockVector<number>()) const;
 
+  /**
+   * @brief Compute the diagonal of this operator.
+   */
+  void
+  compute_diagonal(BlockVector<number> &diagonal) const;
+
 private:
   /**
    * @brief Calls user-defined operator
@@ -168,29 +175,19 @@ private:
                          const BlockVector<number>                   &src,
                          const std::pair<unsigned int, unsigned int> &cell_range) const;
 
-  // public:
-  //   /**
-  //    * @brief Compute the diagonal of this operator.
-  //    */
-  //   void
-  //   compute_diagonal();
-  //
-  // private:
-  //   /**
-  //    * @brief Local computation of the diagonal of the operator.
-  //    */
-  //   void
-  //   compute_local_diagonal(const MatrixFree<dim, number> &_data,
-  //                          BlockVector<number>                                 &dst,
-  //                          const unsigned int                          &dummy,
-  //                          const std::pair<unsigned int, unsigned int> &cell_range)
-  //                          const;
-  //
-  //   template <TensorRank Rank>
-  //   dealii::AlignedVector<Value<Rank>>
-  //   compute_field_diagonal(FieldContainer<dim, degree, number> &variable_list,
-  //                          DSTContainer<dim, degree, number>   &dst_fields,
-  //                          unsigned int                         field_index) const;
+  /**
+   * @brief Local computation of the diagonal of the operator.
+   */
+  void
+  compute_local_diagonal(const MatrixFree<dim, number>               &_data,
+                         BlockVector<number>                         &diagonal,
+                         const BlockVector<number>                   &dummy,
+                         const std::pair<unsigned int, unsigned int> &cell_range) const;
+
+  template <TensorRank Rank>
+  void
+  compute_field_diagonal(FieldContainer<dim, degree, number> &variable_list,
+                         unsigned int                         field_index) const;
 
 public:
   /**
