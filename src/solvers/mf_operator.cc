@@ -18,6 +18,7 @@ MFOperator<dim, degree, number>::compute_operator(BlockVector<number>       &dst
                                                   const BlockVector<number> &src) const
 {
   data->cell_loop(&MFOperator::compute_local_operator, this, dst, src, true);
+  dst.compress(dealii::VectorOperation::add);
   if (scale_by_diagonal)
     {
       for (unsigned int block_index = 0; block_index < dst.n_blocks(); block_index++)
@@ -90,6 +91,8 @@ MFOperator<dim, degree, number>::compute_diagonal(BlockVector<number> &diagonal)
 {
   AssertThrow(data != nullptr, dealii::ExcNotInitialized());
 
+  diagonal = 0.0;
+
   // Initialize the dummy source vector block-by-block.
   BlockVector<number> dummy;
   dummy.reinit(diagonal.n_blocks());
@@ -108,10 +111,12 @@ MFOperator<dim, degree, number>::compute_diagonal(BlockVector<number> &diagonal)
                   this,
                   diagonal,
                   dummy,
-                  true);
+                  false);
+
+  diagonal.compress(dealii::VectorOperation::add);
 
   // Apply diagonal scaling
-  if (scale_by_diagonal)
+  if (scale_by_diagonal) // DEBUG: temporarily disable scaling
     {
       for (unsigned int block_index = 0; block_index < diagonal.n_blocks(); ++block_index)
         {
@@ -123,15 +128,18 @@ MFOperator<dim, degree, number>::compute_diagonal(BlockVector<number> &diagonal)
   auto field_it = solve_block.field_indices.begin();
   for (unsigned int j = 0; j < diagonal.n_blocks(); ++j, ++field_it)
     {
-      unsigned int field_index = *field_it;
+      const unsigned int field_index = *field_it;
 
       const auto &constrained_dofs = data->get_constrained_dofs(field_index);
 
-      for (const auto constrained_dof : constrained_dofs)
-        {
-          diagonal.block(j).local_element(constrained_dof) = 1.0;
-        }
+      auto       &v     = diagonal.block(j);
+      const auto &owned = v.locally_owned_elements();
+
+      for (const auto gdof : constrained_dofs)
+        if (owned.is_element(gdof))
+          v[gdof] = 1.0;
     }
+  diagonal.compress(dealii::VectorOperation::insert);
 }
 
 template <unsigned int dim, unsigned int degree, typename number>
@@ -310,6 +318,19 @@ template <unsigned int dim, unsigned int degree, typename number>
 dealii::types::global_dof_index
 MFOperator<dim, degree, number>::m() const
 {
+  AssertThrow(data != nullptr, dealii::ExcNotInitialized());
+
+  dealii::types::global_dof_index total = 0;
+
+  auto field_it = solve_block.field_indices.begin();
+  for (unsigned int b = 0; b < solve_block.field_indices.size(); ++b, ++field_it)
+    {
+      const unsigned int field_index = *field_it;
+      // partitioner->size() is the global size for that block
+      total += data->get_vector_partitioner(field_index)->size();
+    }
+
+  return total;
   // Assert(data.get() != nullptr, dealii::ExcNotInitialized());
   //
   // const unsigned int total_size =
@@ -321,8 +342,15 @@ MFOperator<dim, degree, number>::m() const
   //                    return sum + data->get_vector_partitioner(field)->size();
   //                  });
   // return total_size;
-  AssertThrow(false, FeatureNotImplemented("m()"));
-  return 0;
+  // AssertThrow(false, FeatureNotImplemented("m()"));
+  // return 0;
+}
+
+template <unsigned int dim, unsigned int degree, typename number>
+dealii::types::global_dof_index
+MFOperator<dim, degree, number>::n() const
+{
+  return m(); // square operator
 }
 
 template <unsigned int dim, unsigned int degree, typename number>
@@ -382,7 +410,12 @@ void
 MFOperator<dim, degree, number>::vmult(BlockVector<number>       &dst,
                                        const BlockVector<number> &src) const
 {
+  auto &src_nc = const_cast<BlockVector<number> &>(src);
+  src_nc.update_ghost_values();
+
   compute_operator(dst, src);
+
+  src_nc.zero_out_ghost_values();
 }
 
 // NOLINTBEGIN(readability-identifier-naming)

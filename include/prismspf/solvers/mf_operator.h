@@ -206,6 +206,8 @@ public:
    */
   dealii::types::global_dof_index
   m() const;
+  dealii::types::global_dof_index
+  n() const;
 
   /**
    * @brief Return the value of the matrix entry. This function is only valid when row ==

@@ -196,24 +196,186 @@ public:
             case PreconditionerType::None:
             case PreconditionerType::GMG: // not implemented, fallback to None
               {
-                cg_solver.solve(lhs_operator,
-                                x_vector,
-                                b_vector,
-                                dealii::PreconditionIdentity());
+                Timer::start_section("Linear solve: CG solve (Identity)");
+                try
+                  {
+                    cg_solver.solve(lhs_operator,
+                                    x_vector,
+                                    b_vector,
+                                    dealii::PreconditionIdentity());
+                  }
+                catch (...)
+                  {
+                    Timer::end_section("Linear solve: CG solve (Identity)");
+                    ConditionalOStreams::pout_base()
+                      << "CG stopped at iter " << linear_solver_control.last_step()
+                      << " with residual " << linear_solver_control.last_value()
+                      << "\n\n";
+                    throw;
+                  }
+
+                Timer::end_section("Linear solve: CG solve (Identity)");
+
+                const unsigned int iters     = linear_solver_control.last_step();
+                const double       final_res = linear_solver_control.last_value();
+
+                ConditionalOStreams::pout_summary()
+                  << "CG iters: " << iters << " final residual: " << final_res << '\n';
+
                 break;
               }
             case PreconditionerType::Jacobi:
               {
-                // Compute the diagonal of the matrix-free operator
-                lhs_operator.compute_diagonal(preconditioner_diagonal);
+                /*
+                // DEBUG: test symmetry
+                {
+                  BlockVector<number> u, v, Au, Av;
+                  u.reinit(x_vector);
+                  v.reinit(x_vector);
+                  Au.reinit(x_vector);
+                  Av.reinit(x_vector);
 
-                cg_solver.solve(lhs_operator, x_vector, b_vector, jacobi_preconditioner);
+                  // Fill u and v with something nontrivial on owned entries
+                  for (unsigned int b = 0; b < u.n_blocks(); ++b)
+                    {
+                      auto &ub = u.block(b);
+                      auto &vb = v.block(b);
+
+                      for (auto i : ub.locally_owned_elements())
+                        ub[i] = 0.37; // simple deterministic values are fine
+                      for (auto i : vb.locally_owned_elements())
+                        vb[i] = 0.11;
+                    }
+
+                  // IMPORTANT: if your vmult reads ghost values from the source vector,
+                  // you must update ghosts before calling vmult.
+                  u.update_ghost_values();
+                  v.update_ghost_values();
+
+                  lhs_operator.vmult(Av, v);
+                  lhs_operator.vmult(Au, u);
+
+                  // If your vmult writes to vectors with ghosts, you might need compress
+                  // here, but typically vmult writes only owned entries.
+                  // Au.compress(VectorOperation::add); Av.compress(VectorOperation::add);
+
+                  const double utAv = u * Av;
+                  const double vtAu = v * Au;
+
+                  const double denom    = std::max({1.0, std::abs(utAv), std::abs(vtAu)});
+                  const double rel_diff = std::abs(utAv - vtAu) / denom;
+
+                  ConditionalOStreams::pout_summary()
+                    << "Symmetry check: u^T A v = " << utAv << ", v^T A u = " << vtAu
+                    << ", rel diff = " << rel_diff << "\n\n";
+
+                  u.zero_out_ghost_values();
+                  v.zero_out_ghost_values();
+                }
+                // DEBUG: Check definiteness
+                {
+                  BlockVector<number> u, Au;
+                  u.reinit(x_vector);
+                  Au.reinit(x_vector);
+
+                  // fill u with something nontrivial
+                  for (unsigned int b = 0; b < u.n_blocks(); ++b)
+                    for (auto i : u.block(b).locally_owned_elements())
+                      u.block(b)[i] = 0.37;
+
+                  u.update_ghost_values();
+                  lhs_operator.vmult(Au, u);
+
+                  const double uAu = u * Au;
+                  const double uu  = u * u;
+
+                  ConditionalOStreams::pout_summary()
+                    << "Definiteness check: uAu=" << uAu << " , uu=" << uu
+                    << " , Rayleigh=" << (uAu / uu) << "\n\n";
+                }
+                */
+                // Compute the diagonal of the matrix-free operator
+                Timer::start_section("Linear solve: compute diagonal");
+                try
+                  {
+                    lhs_operator.compute_diagonal(preconditioner_diagonal);
+                  }
+                catch (...)
+                  {
+                    Timer::end_section("Linear solve: compute diagonal");
+                    throw;
+                  }
+                Timer::end_section("Linear solve: compute diagonal");
+
+                /*
+                // DEBUG: check nan and nonpositive diagonal
+                {
+                  for (unsigned int b = 0; b < preconditioner_diagonal.n_blocks(); ++b)
+                    {
+                      const auto &v     = preconditioner_diagonal.block(b);
+                      const auto &owned = v.locally_owned_elements();
+
+                      double      local_min    = std::numeric_limits<double>::infinity();
+                      double      local_max    = -std::numeric_limits<double>::infinity();
+                      std::size_t local_nonpos = 0;
+
+                      for (auto i : owned)
+                        {
+                          const double d = v[i];
+                          local_min      = std::min(local_min, d);
+                          local_max      = std::max(local_max, d);
+                          if (!(d > 0.0) || !std::isfinite(d))
+                            local_nonpos++;
+                        }
+
+                      // (Optionally MPI-reduce)
+                      ConditionalOStreams::pout_summary()
+                        << "diag block " << b << " min=" << local_min
+                        << " max=" << local_max << " nonpos_or_nan=" << local_nonpos
+                        << "\n\n";
+                    }
+                }
+                */
+
+                Timer::start_section("Linear solve: Jacobi reinit");
+                jacobi_preconditioner.reinit(preconditioner_diagonal);
+                Timer::end_section("Linear solve: Jacobi reinit");
+
+                Timer::start_section("Linear solve: CG solve (Jacobi)");
+                try
+                  {
+                    cg_solver.solve(lhs_operator,
+                                    x_vector,
+                                    b_vector,
+                                    jacobi_preconditioner);
+                  }
+                catch (...)
+                  {
+                    Timer::end_section("Linear solve: CG solve (Jacobi)");
+
+                    ConditionalOStreams::pout_base()
+                      << "CG stopped at iter " << linear_solver_control.last_step()
+                      << " with residual " << linear_solver_control.last_value()
+                      << "\n\n";
+
+                    throw;
+                  }
+                Timer::end_section("Linear solve: CG solve (Jacobi)");
+
+                ConditionalOStreams::pout_summary()
+                  << "CG iters: " << linear_solver_control.last_step()
+                  << " final residual: " << linear_solver_control.last_value() << '\n';
+
                 break;
               }
             case PreconditionerType::Chebyshev:
               {
+                ConditionalOStreams::pout_summary()
+                  << "Entered Chebyshev preconditioner branch\n";
                 // Compute diagonal values
+                ConditionalOStreams::pout_summary() << "Cheb: compute_diagonal begin\n";
                 lhs_operator.compute_diagonal(preconditioner_diagonal);
+                ConditionalOStreams::pout_summary() << "Cheb: compute_diagonal done\n";
 
                 // Setup Chebyshev
                 using ChebyshevPreconditioner = dealii::PreconditionChebyshev<
@@ -221,19 +383,60 @@ public:
                   BlockVector<number>,
                   dealii::DiagonalMatrix<BlockVector<number>>>;
                 typename ChebyshevPreconditioner::AdditionalData chebyshev_data;
-                chebyshev_data.degree = 3;
+                chebyshev_data.degree              = 30;
+                chebyshev_data.smoothing_range     = 20.0;
+                chebyshev_data.eig_cg_n_iterations = 20;
+                chebyshev_data.eig_cg_residual     = 1e-4;
+                chebyshev_data.eigenvalue_algorithm =
+                  ChebyshevPreconditioner::AdditionalData::EigenvalueAlgorithm::lanczos;
+                // chebyshev_data.polynomial_type =
+                // Cheb::AdditionalData::PolynomialType::fourth_kind;
 
                 chebyshev_data.preconditioner =
                   std::make_shared<dealii::DiagonalMatrix<BlockVector<number>>>();
                 chebyshev_data.preconditioner->reinit(preconditioner_diagonal);
 
                 ChebyshevPreconditioner chebyshev_preconditioner;
-                chebyshev_preconditioner.initialize(lhs_operator, chebyshev_data);
+                ConditionalOStreams::pout_summary() << "Cheb: initialize begin\n";
+                try
+                  {
+                    chebyshev_preconditioner.initialize(lhs_operator, chebyshev_data);
+                  }
+                catch (const std::exception &e)
+                  {
+                    ConditionalOStreams::pout_base()
+                      << "Chebyshev initialize() threw: " << e.what() << "\n";
+                    throw;
+                  }
+                ConditionalOStreams::pout_summary() << "Cheb: initialize done\n";
 
-                cg_solver.solve(lhs_operator,
-                                x_vector,
-                                b_vector,
-                                chebyshev_preconditioner);
+                ConditionalOStreams::pout_summary() << "Cheb: solve begin\n";
+                Timer::start_section("Linear solve: CG solve (Chebyshev)");
+                try
+                  {
+                    cg_solver.solve(lhs_operator,
+                                    x_vector,
+                                    b_vector,
+                                    chebyshev_preconditioner);
+                    ConditionalOStreams::pout_summary() << "Cheb: solve done\n";
+                  }
+                catch (...)
+                  {
+                    Timer::end_section("Linear solve: CG solve (Chebyshev)");
+
+                    ConditionalOStreams::pout_base()
+                      << "CG stopped at iter " << linear_solver_control.last_step()
+                      << " with residual " << linear_solver_control.last_value()
+                      << "\n\n";
+
+                    throw;
+                  }
+                Timer::end_section("Linear solve: CG solve (Chebyshev)");
+
+                ConditionalOStreams::pout_summary()
+                  << "CG iters: " << linear_solver_control.last_step()
+                  << " final residual: " << linear_solver_control.last_value() << '\n';
+
                 break;
               }
           }
