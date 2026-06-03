@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['m_0',['m',['../classMFOperator.html#a01ab9046ce2995b4a3138406eb621c99',1,'MFOperator']]],
+  ['make_5fbc_5fconstraints_1',['make_bc_constraints',['../classConstraintManager.html#a65bc1c1252fa1ea19e3fc8212f9d1d89',1,'ConstraintManager']]],
+  ['make_5fconstraints_5ffor_5fsingle_5ffield_2',['make_constraints_for_single_field',['../classConstraintManager.html#a9e23bab4e61e770dad48451d97f475b4',1,'ConstraintManager']]],
+  ['make_5fdependency_5fset_3',['make_dependency_set',['../dependencies_8h.html#a8ee155eab2c56d1d5418eed94e41a238',1,'dependencies.h']]],
+  ['make_5fdirichlet_5fconstraints_4',['make_dirichlet_constraints',['../classConstraintManager.html#a5bfc7442d158e82646c8a0e35b8778d7',1,'ConstraintManager']]],
+  ['make_5fnatural_5fconstraints_5',['make_natural_constraints',['../classConstraintManager.html#a88966ca25a3ce2101f6a071a6a8338ed',1,'ConstraintManager']]],
+  ['make_5fone_5fboundary_5fconstraint_6',['make_one_boundary_constraint',['../classConstraintManager.html#a5d0d27d70067a7e0a39ec4039c806353',1,'ConstraintManager']]],
+  ['make_5fperiodic_5fconstraints_7',['make_periodic_constraints',['../classConstraintManager.html#a576440ff12a5e701e56948d5a1b9b2f2',1,'ConstraintManager']]],
+  ['make_5fsolvers_8',['make_solvers',['../problem_8cc.html#a8d4dad407df2092eb0cb751ee879200a',1,'problem.cc']]],
+  ['mark_5fboundaries_9',['mark_boundaries',['../structRectangularMesh.html#a27dbdacf5965a876095e3a66bb1f7aba',1,'RectangularMesh::mark_boundaries()'],['../structSphericalMesh.html#a927c791137e3a8e81d8e15b5e7fc633a',1,'SphericalMesh::mark_boundaries()']]],
+  ['mark_5fcells_5ffor_5frefinement_10',['mark_cells_for_refinement',['../classRefinementManager.html#a2d2d992e4a3bb9507dca5a3060cf0983',1,'RefinementManager']]],
+  ['mark_5fcells_5ffor_5frefinement_5fand_5fcoarsening_11',['mark_cells_for_refinement_and_coarsening',['../classRefinementManager.html#a60db8f1c1a8bc2bc8259232053b28e3c',1,'RefinementManager']]],
+  ['mark_5fperiodic_12',['mark_periodic',['../structRectangularMesh.html#a1239e45b673843dd168d6c79e7f401eb',1,'RectangularMesh']]],
+  ['matrixfreemanager_13',['MatrixFreeManager',['../classMatrixFreeManager.html#ae3c084c27c4bdc64da61df3ceb8aecc2',1,'MatrixFreeManager']]],
+  ['mfoperator_14',['MFOperator',['../classMFOperator.html#aa7978a0727f7cf68dabcb5f29f1b7c75',1,'MFOperator']]],
+  ['mg_5fsolve_15',['mg_solve',['../classMGSolver.html#ab81a67968dc9a3a2b744e280428350c9',1,'MGSolver']]],
+  ['mgsolver_16',['MGSolver',['../classMGSolver.html#accf7afa820d7d82ce169b3fdddbe2235',1,'MGSolver']]],
+  ['mpi_5fbroadcast_5fnuclei_17',['mpi_broadcast_nuclei',['../classNucleationManager.html#a4cf6ea096ed7b1291bc2928cd0904bca',1,'NucleationManager']]],
+  ['mpi_5fdatatype_18',['mpi_datatype',['../structNucleus.html#a567edb715eee48cd250f9eece9a8008b',1,'Nucleus']]],
+  ['mpi_5fgather_5fnuclei_19',['mpi_gather_nuclei',['../classNucleationManager.html#aa9cad1ef245a6e38a738ca90f3d97f26',1,'NucleationManager']]],
+  ['mpiinitfinalize_20',['MPIInitFinalize',['../classMPIInitFinalize.html#aba602b90b70fc51525c68b326c3e2cbb',1,'MPIInitFinalize']]]
+];
