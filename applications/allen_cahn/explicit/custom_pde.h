@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: © 2025 PRISMS Center at the University of Michigan
 // SPDX-License-Identifier: GNU Lesser General Public Version 2.1
 
+#include <prismspf/core/math.h>
 #include <prismspf/core/pde_operator_base.h>
 
 PRISMS_PF_BEGIN_NAMESPACE
@@ -61,11 +62,11 @@ private:
             const number comp_diff = point[dir] - center[i][dir] * mesh_size[dir];
             dist += comp_diff * comp_diff;
           }
-        dist = std::sqrt(dist);
+        dist = math::sqrt(dist);
 
-        scalar_value += 0.5 * (1.0 - std::tanh((dist - rad[i]) / 1.5));
+        scalar_value += 0.5 * (1.0 - math::tanh((dist - rad[i]) / 1.5));
       }
-    scalar_value = std::min(scalar_value, number(1.0));
+    scalar_value = math::fmin(scalar_value, number(1.0));
   }
 
   void
